@@ -5,6 +5,11 @@
             .hidden{
                 display: none;
             }
+            ul{
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
         </style>
 
     </head>
@@ -17,13 +22,38 @@
         <div id="error" class="hidden">Something went wrong!</div>
         <ul id="todos">
             {% for d in data %}
-            <li>{{d.description}}</li>
+            <li><input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif %}/>{{d.description}}</li>
             {% endfor %}
         </ul>
-        <script>
-            console.log("load")
+        <script> 
+            const checkboxes = document.querySelectorAll('.check-completed');
+            for(let i = 0; i < checkboxes.length; i++){
+                const checkbox = checkboxes[i];
+                checkbox.onchange = function(e){
+                    console.log('event', e);
+                    const newCompleted = e.target.checked;
+                    const todoId = e.target.dataset['id'];
+                    fetch('/todos/' + todoId+ 'set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': newCompleted
+                        }),
+                        headers: {
+                        'Content-Type': 'application/json'
+                    }
+                    })
+                    .then(function(){
+                    document.getElementById('error').className='hidden';
+                    // className='' --> show error
+                })
+                    .catch(function(){
+                    document.getElementById('error').className='';
+                    // className='' --> show error
+                })
+                    
+                }
+            }
             document.getElementById('form').onsubmit=function(e){
-                console.log("submit");
                 e.preventDefault();
                 fetch('/todos/create',{
                     method:'POST',
@@ -33,6 +63,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     }
+                    // send response to app.py, then backend generate data and send back response
                 })
                 .then(function(response){
                     return response.json();
@@ -43,10 +74,13 @@
                     liItem.innerHTML = jsonResponse['description'];
                     document.getElementById('todos').appendChild(liItem);
                     document.getElementById('error').className='hidden';
+                    // className='hidden' --> hide error
                 })
                 .catch(function(){
                     document.getElementById('error').className='';
+                    // className='' --> show error
                 })
+
             }
         </script>
 
