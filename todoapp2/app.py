@@ -34,8 +34,12 @@ def create_todo():
     body={}
     try:
         description = request.get_json()['description']
-        todo = Todo(description=description)
+        list_id = request.get_json()['list_id']
+        print(request.get_json())
+        todo = Todo(description=description, list_id=list_id)
+        
         db.session.add(todo)
+        
         db.session.commit()
         body['description'] = todo.description
     except:
@@ -51,18 +55,11 @@ def create_todo():
 
 @app.route('/todos/<todo_id>/set-completed', methods=['POST'])
 def set_completed_todo(todo_id):
-    try:
-        print('t1 ',todo_id)
-        
+    try:    
         completed = request.get_json()['completed']
-        print('t2 ',todo_id)
-
         todo = Todo.query.get(todo_id)
-        print('before ', todo.completed)
-
         todo.completed=completed
-        print('t3 ',todo_id)
-        print('after ', todo.completed)
+        print('test1')
         db.session.commit()
     except:
         print('rollback ')
@@ -86,9 +83,11 @@ def delete_todo(todo_id):
 @app.route('/lists/<list_id>')
 def get_list_todos(list_id):
     return render_template('index.html', 
-    lists=TodoList.query.all(),
+    lists=TodoList.query.all(),   
     active_list=TodoList.query.get(list_id),
     todos=Todo.query.filter_by(list_id=list_id).order_by('id').all())
+    # html and parameters are passed to render_template together,
+    # render_template will combine them and decide how they work together
 
 @app.route('/')
 def index():
